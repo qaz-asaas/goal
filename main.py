@@ -72,14 +72,14 @@ class GoalApp(App):
         self.load_goals()
         self.user_info = self.load_user_info()
         
-        self.main_layout = FloatLayout()
+        self.main_layout = FloatLayout(size_hint=(1, 1))
         
         with self.main_layout.canvas.before:
             Color(0.9, 0.95, 1, 1)
-            self.bg_rect = Rectangle(size=Window.size, pos=self.main_layout.pos)
-        self.main_layout.bind(size=self.update_bg_rect, pos=self.update_bg_rect)
+            self.bg_rect = Rectangle(size=Window.size, pos=(0, 0))
+        self.main_layout.bind(size=self.update_bg_rect)
         
-        self.content_layout = BoxLayout(orientation='vertical')
+        self.content_layout = BoxLayout(orientation='vertical', size_hint=(1, 1))
         
         self.header = Label(text='🎯 目标储蓄', font_size=24, bold=True, size_hint_y=None, height=50, font_name=CHINESE_FONT, color=(0.1, 0.3, 0.6, 1))
         
@@ -144,7 +144,6 @@ class GoalApp(App):
     
     def update_bg_rect(self, instance, value):
         self.bg_rect.size = instance.size
-        self.bg_rect.pos = instance.pos
     
     def update_nav_bg(self, instance, value):
         instance.canvas.before.clear()
