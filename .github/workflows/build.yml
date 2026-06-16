@@ -20,9 +20,14 @@ jobs:
       run: |
         yes | sdkmanager --licenses || true
     
+    - name: Create non-root user
+      run: |
+        useradd -m builder
+        chown -R builder:builder /github/workspace
+    
     - name: Build APK
       run: |
-        buildozer android debug
+        su - builder -c "cd /github/workspace && buildozer android debug"
     
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
