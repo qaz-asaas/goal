@@ -18,7 +18,7 @@ jobs:
     
     - name: Build APK
       run: |
-        BUILDOZER_ALLOW_ROOT=1 buildozer android debug
+        yes | buildozer android debug
     
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
