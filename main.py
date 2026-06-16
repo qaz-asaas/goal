@@ -676,7 +676,6 @@ class GoalApp(App):
             title='确认删除', 
             content=popup_layout, 
             size_hint=(0.85, 0.5),
-            background='atlas://data/images/defaulttheme/modal_view-background',
             separator_color=(0.9, 0.3, 0.3, 1)
         )
         self.delete_popup.title_font = CHINESE_FONT
