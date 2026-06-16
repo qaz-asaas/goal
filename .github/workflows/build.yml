@@ -36,9 +36,14 @@ jobs:
           cmake libffi-dev libssl-dev \
           automake ant
     
+    - name: Accept Android SDK licenses
+      run: |
+        yes | sdkmanager --licenses || true
+    
     - name: Build APK
       run: |
-        buildozer android debug deploy run
+        export ANDROID_SDK_ROOT=/home/runner/.buildozer/android/platform/android-sdk
+        buildozer android debug
     
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4

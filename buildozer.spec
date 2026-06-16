@@ -15,6 +15,7 @@ fullscreen = 0
 android.api = 33
 android.ndk = 25b
 android.buildtools = 33.0.0
+android.accept_sdk_license = True
 
 android.add_assets = goals.json,user_info.json
 android.add_permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA
