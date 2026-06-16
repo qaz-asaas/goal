@@ -14,7 +14,6 @@ osx.kivy_version = 1.9.1
 fullscreen = 0
 android.api = 33
 android.ndk = 25b
-android.sdk = 24
 android.buildtools = 33.0.0
 
 android.add_assets = goals.json,user_info.json
@@ -23,6 +22,3 @@ android.add_permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,
 [buildozer]
 log_level = 2
 warn_on_root = 1
-
-[app:android]
-android.add_assets = goals.json,user_info.json
