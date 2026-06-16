@@ -29,16 +29,27 @@ resource_add_path(os.path.dirname(__file__))
 font_paths = [
     r'C:\Windows\Fonts\simhei.ttf',
     r'C:\Windows\Fonts\msyh.ttf',
+    r'C:\Windows\Fonts\msyhbd.ttf',
+    r'C:\Windows\Fonts\simsun.ttc',
     '/system/fonts/DroidSansFallback.ttf',
+    '/system/fonts/NotoSansCJK-SC-Regular.otf',
+    '/system/fonts/NotoSerifCJK-SC-Regular.otf',
+    '/system/fonts/SourceHanSansSC-Regular.otf',
+    '/system/fonts/SourceHanSerifSC-Regular.otf',
     '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
+    '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',
 ]
 
 CHINESE_FONT = 'DejaVuSans'
 for font_path in font_paths:
     if os.path.exists(font_path):
-        LabelBase.register(name='ChineseFont', fn_regular=font_path)
-        CHINESE_FONT = 'ChineseFont'
-        break
+        try:
+            LabelBase.register(name='ChineseFont', fn_regular=font_path)
+            CHINESE_FONT = 'ChineseFont'
+            Logger.info(f'Registered Chinese font: {font_path}')
+            break
+        except Exception as e:
+            Logger.warning(f'Failed to register font {font_path}: {e}')
 
 class GoalItem(BoxLayout):
     name = StringProperty('')
@@ -63,7 +74,7 @@ class GoalItem(BoxLayout):
 
 class GoalApp(App):
     def build(self):
-        from kivy.uix.floatlayout import FloatLayout
+        Window.clearcolor = (0.9, 0.95, 1, 1)
         
         Window.size = (400, 700)
         Window.title = '目标储蓄'
@@ -71,13 +82,6 @@ class GoalApp(App):
         self.goals = []
         self.load_goals()
         self.user_info = self.load_user_info()
-        
-        self.main_layout = FloatLayout(size_hint=(1, 1))
-        
-        with self.main_layout.canvas.before:
-            Color(0.9, 0.95, 1, 1)
-            self.bg_rect = Rectangle(size=Window.size, pos=(0, 0))
-        self.main_layout.bind(size=self.update_bg_rect)
         
         self.content_layout = BoxLayout(orientation='vertical', size_hint=(1, 1))
         
@@ -136,14 +140,9 @@ class GoalApp(App):
         self.content_layout.add_widget(self.project_layout)
         self.content_layout.add_widget(self.nav_bar)
         
-        self.main_layout.add_widget(self.content_layout)
-        
         self.refresh_goals_list()
         
-        return self.main_layout
-    
-    def update_bg_rect(self, instance, value):
-        self.bg_rect.size = instance.size
+        return self.content_layout
     
     def update_nav_bg(self, instance, value):
         instance.canvas.before.clear()
