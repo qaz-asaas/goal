@@ -16,18 +16,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
     
-    - name: Accept Android SDK licenses
-      run: |
-        yes | sdkmanager --licenses || true
-    
-    - name: Create non-root user
-      run: |
-        useradd -m builder
-        chown -R builder:builder /github/workspace
-    
     - name: Build APK
       run: |
-        su - builder -c "cd /github/workspace && buildozer android debug"
+        BUILDOZER_ALLOW_ROOT=1 buildozer android debug
     
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
