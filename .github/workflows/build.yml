@@ -32,7 +32,7 @@ jobs:
           git zip unzip openjdk-17-jdk \
           autoconf libtool pkg-config \
           zlib1g-dev libncurses5-dev \
-          libncursesw5-dev libtinfo5 \
+          libncursesw5-dev libtinfo6 \
           cmake libffi-dev libssl-dev \
           automake
     
