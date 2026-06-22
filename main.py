@@ -10,14 +10,33 @@ from kivy.properties import StringProperty, NumericProperty
 from kivy.core.window import Window
 from kivy.core.text import LabelBase
 from kivy.graphics import Color, Rectangle
+from kivy.utils import platform
+from kivy.logger import Logger
 import json
 import os
+import traceback
+import sys
 
+# ---- 全局崩溃保护 ----
+def handle_exception(exc_type, exc_value, exc_tb):
+    """捕获所有未处理异常，防止闪退"""
+    error_msg = ''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
+    Logger.error(f'Global Exception: {error_msg}')
+    try:
+        with open(os.path.join(os.environ.get('EXTERNAL_STORAGE', '/sdcard'), 'goal_error.log'), 'w') as f:
+            f.write(error_msg)
+    except:
+        pass
+
+sys.excepthook = handle_exception
+
+# ---- Plyer filechooser ----
+HAS_PLYER = False
 try:
     from plyer import filechooser
     HAS_PLYER = True
-except ImportError:
-    HAS_PLYER = False
+except Exception:
+    pass
 
 class GoalItem(BoxLayout):
     name = StringProperty('')
@@ -41,6 +60,36 @@ class GoalItem(BoxLayout):
             self.progress = 0
 
 class GoalApp(App):
+    def get_data_dir(self):
+        """
+        获取应用数据目录。
+        Android: 使用 App 私有目录 /data/data/<package>/files
+        PC: 使用 user_data_dir
+        注意：此方法不能在 build() 之前调用
+        """
+        try:
+            if platform == 'android':
+                # 方法1: 使用 pyjnius 获取 Context
+                from jnius import autoclass
+                PythonActivity = autoclass('org.kivy.android.PythonActivity')
+                context = PythonActivity.mActivity
+                if context:
+                    files_dir = context.getFilesDir().getAbsolutePath()
+                    if not os.path.exists(files_dir):
+                        os.makedirs(files_dir)
+                    return files_dir
+                # 备用方案: 环境变量
+                data_dir = os.environ.get('ANDROID_APP_PATH', '/data/data/org.example.goal/files')
+                if not os.path.exists(data_dir):
+                    os.makedirs(data_dir)
+                return data_dir
+            else:
+                return self.user_data_dir
+        except Exception as e:
+            Logger.error(f'get_data_dir error: {e}')
+            # 最终兜底
+            return self.user_data_dir
+
     def build(self):
         Window.clearcolor = (0.9, 0.95, 1, 1)
         
@@ -244,8 +293,35 @@ class GoalApp(App):
         self.popup.dismiss()
     
     def select_avatar(self, instance):
-        if HAS_PLYER:
-            filechooser.open_file(on_selection=self.on_avatar_selected, filters=['*.png', '*.jpg', '*.jpeg'])
+        """选择头像 - Android 上安全处理"""
+        try:
+            if platform == 'android':
+                # Android 上使用原生 Intent 选择图片
+                from jnius import autoclass, cast
+                from android import activity
+                PythonActivity = autoclass('org.kivy.android.PythonActivity')
+                Intent = autoclass('android.content.Intent')
+                intent = Intent(Intent.ACTION_PICK)
+                intent.setType('image/*')
+                currentActivity = cast('android.app.Activity', PythonActivity.mActivity)
+                currentActivity.startActivityForResult(intent, 1001)
+                
+                def on_activity_result(request_code, result_code, data):
+                    if request_code == 1001 and result_code == -1:  # RESULT_OK = -1
+                        try:
+                            uri = data.getData()
+                            if uri:
+                                self.user_info['avatar'] = uri.toString()
+                                self.save_user_info(None)
+                        except Exception as e:
+                            Logger.error(f'avatar select error: {e}')
+                    activity.unbind(on_activity_result=on_activity_result)
+                
+                activity.bind(on_activity_result=on_activity_result)
+            elif HAS_PLYER:
+                filechooser.open_file(on_selection=self.on_avatar_selected, filters=['*.png', '*.jpg', '*.jpeg'])
+        except Exception as e:
+            Logger.error(f'select_avatar error: {e}')
     
     def on_avatar_selected(self, selection):
         if selection:
@@ -254,23 +330,27 @@ class GoalApp(App):
     
     def save_user_info(self, instance):
         self.user_info['name'] = self.name_input.text
-        with open('user_info.json', 'w', encoding='utf-8') as f:
+        filepath = os.path.join(self.get_data_dir(), 'user_info.json')
+        with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(self.user_info, f, ensure_ascii=False)
     
     def load_user_info(self):
         try:
-            with open('user_info.json', 'r', encoding='utf-8') as f:
+            filepath = os.path.join(self.get_data_dir(), 'user_info.json')
+            with open(filepath, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except:
             return {'name': '', 'avatar': ''}
     
     def save_goals(self):
-        with open('goals.json', 'w', encoding='utf-8') as f:
+        filepath = os.path.join(self.get_data_dir(), 'goals.json')
+        with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(self.goals, f, ensure_ascii=False)
     
     def load_goals(self):
         try:
-            with open('goals.json', 'r', encoding='utf-8') as f:
+            filepath = os.path.join(self.get_data_dir(), 'goals.json')
+            with open(filepath, 'r', encoding='utf-8') as f:
                 self.goals = json.load(f)
         except:
             self.goals = []
