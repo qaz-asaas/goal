@@ -17,7 +17,7 @@ android.api = 33
 android.ndk = 25b
 android.buildtools = 33.0.0
 android.accept_sdk_license = True
-android.arch = arm64-v8a
+android.archs = arm64-v8a
 android.allow_backup = True
 android.enable_androidx = True
 
