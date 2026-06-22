@@ -13,22 +13,30 @@ jobs:
     container: kivy/buildozer
     permissions:
       contents: write
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    
+
+    - name: Cache Buildozer
+      uses: actions/cache@v4
+      with:
+        path: .buildozer
+        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+        restore-keys: |
+          ${{ runner.os }}-buildozer-
+
     - name: Build APK
       run: |
         yes | buildozer android debug
-    
+
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
         name: goal-app
         path: bin/*.apk
         retention-days: 30
-    
+
     - name: Create Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: softprops/action-gh-release@v1
